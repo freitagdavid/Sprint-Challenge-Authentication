@@ -1,6 +1,6 @@
 const axios = require('axios');
 const db = require('../database/dbConfig');
-const { authenticate } = require('../auth/authenticate');
+const { authenticate, checkPassword } = require('../auth/authenticate');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -24,7 +24,25 @@ function register(req, res) {
 }
 
 function login(req, res) {
-    // implement user login
+    const creds = req.body;
+
+    db('users')
+        .where({ username: creds.username })
+        .first()
+        .then(user => {
+            let token = '';
+            try {
+                token = checkPassword(user, creds);
+                res.status(200).json({
+                    message: 'Successfully logged in.',
+                    token,
+                });
+            } catch (err) {
+                res.status(401).json({
+                    message: 'Username or password are incorrect.',
+                });
+            }
+        });
 }
 
 function getJokes(req, res) {
